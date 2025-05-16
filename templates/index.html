@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication API Tester</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .endpoints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .endpoint {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .endpoint:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .endpoint h3 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .response {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .success {
+            color: var(--success-color);
+        }
+
+        .error {
+            color: var(--error-color);
+        }
+
+        .token-display {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            word-break: break-all;
+        }
+
+        .token-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .endpoints-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Authentication API Tester</h1>
+            <p>Test your authentication endpoints with this interactive interface</p>
+        </div>
+        
+        <div class="endpoints-grid">
+            <div class="endpoint">
+                <h3>Register User</h3>
+                <div class="form-group">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="Enter email">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" placeholder="Enter password">
+                </div>
+                <button onclick="register()">Register</button>
+                <div id="register-response" class="response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3>Login</h3>
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password">
+                </div>
+                <button onclick="login()">Login</button>
+                <div id="login-response" class="response"></div>
+                <div id="login-tokens" class="token-display" style="display: none;">
+                    <div class="token-label">Access Token:</div>
+                    <div id="access-token-display"></div>
+                    <div class="token-label" style="margin-top: 0.5rem;">Refresh Token:</div>
+                    <div id="refresh-token-display"></div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>Refresh Token</h3>
+                <div class="form-group">
+                    <label for="refresh-token">Refresh Token</label>
+                    <input type="text" id="refresh-token" placeholder="Enter refresh token">
+                </div>
+                <button onclick="refreshToken()">Refresh Token</button>
+                <div id="refresh-response" class="response"></div>
+            </div>
+
+            <div class="endpoint">
+                <h3>Protected Route</h3>
+                <div class="form-group">
+                    <label for="access-token">Access Token</label>
+                    <input type="text" id="access-token" placeholder="Enter access token">
+                </div>
+                <button onclick="accessProtected()">Access Protected Route</button>
+                <div id="protected-response" class="response"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function displayResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.className = 'response ' + (isError ? 'error' : 'success');
+        }
+
+        function displayTokens(accessToken, refreshToken) {
+            const tokenDisplay = document.getElementById('login-tokens');
+            document.getElementById('access-token-display').textContent = accessToken;
+            document.getElementById('refresh-token-display').textContent = refreshToken;
+            tokenDisplay.style.display = 'block';
+        }
+
+        async function register() {
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            try {
+                const response = await fetch('/api/auth/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, email, password }),
+                });
+                const data = await response.json();
+                displayResponse('register-response', data, !response.ok);
+            } catch (error) {
+                displayResponse('register-response', { error: error.message }, true);
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch('/api/auth/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                const data = await response.json();
+                displayResponse('login-response', data, !response.ok);
+                
+                if (data.access && data.refresh) {
+                    document.getElementById('access-token').value = data.access;
+                    document.getElementById('refresh-token').value = data.refresh;
+                    displayTokens(data.access, data.refresh);
+                }
+            } catch (error) {
+                displayResponse('login-response', { error: error.message }, true);
+            }
+        }
+
+        async function refreshToken() {
+            const refresh = document.getElementById('refresh-token').value;
+
+            try {
+                const response = await fetch('/api/auth/token/refresh/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refresh }),
+                });
+                const data = await response.json();
+                displayResponse('refresh-response', data, !response.ok);
+                
+                if (data.access) {
+                    document.getElementById('access-token').value = data.access;
+                    document.getElementById('access-token-display').textContent = data.access;
+                }
+            } catch (error) {
+                displayResponse('refresh-response', { error: error.message }, true);
+            }
+        }
+
+        async function accessProtected() {
+            const token = document.getElementById('access-token').value;
+
+            try {
+                const response = await fetch('/api/protected/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                const data = await response.json();
+                displayResponse('protected-response', data, !response.ok);
+            } catch (error) {
+                displayResponse('protected-response', { error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html> 
