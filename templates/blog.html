@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Posts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .post-form {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .post {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .post-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .post-meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .post-content {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .like-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+        }
+
+        .like-button:hover {
+            background-color: var(--background-color);
+        }
+
+        .like-button.liked {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .delete-button {
+            background-color: var(--error-color);
+        }
+
+        .delete-button:hover {
+            background-color: #dc2626;
+        }
+
+        .response {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+        }
+
+        .success {
+            color: var(--success-color);
+        }
+
+        .error {
+            color: var(--error-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .auth-status {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            background-color: var(--background-color);
+        }
+
+        .auth-status.logged-in {
+            color: var(--success-color);
+        }
+
+        .auth-status.logged-out {
+            color: var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Blog Posts</h1>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="nav-button">Back to Home</a>
+        </div>
+
+        <div id="auth-status" class="auth-status"></div>
+
+        <div class="post-form">
+            <h2>Create New Post</h2>
+            <div class="form-group">
+                <label for="post-title">Title</label>
+                <input type="text" id="post-title" placeholder="Enter post title">
+            </div>
+            <div class="form-group">
+                <label for="post-content">Content</label>
+                <textarea id="post-content" placeholder="Write your post content here..."></textarea>
+            </div>
+            <button onclick="createPost()">Create Post</button>
+            <div id="post-response" class="response"></div>
+        </div>
+
+        <div id="posts-list"></div>
+    </div>
+
+    <script>
+        let accessToken = localStorage.getItem('accessToken');
+
+        function updateAuthStatus() {
+            const authStatus = document.getElementById('auth-status');
+            if (accessToken) {
+                authStatus.textContent = 'You are logged in';
+                authStatus.className = 'auth-status logged-in';
+            } else {
+                authStatus.textContent = 'Please login at the home page to create posts';
+                authStatus.className = 'auth-status logged-out';
+            }
+        }
+
+        // Update auth status when page loads
+        updateAuthStatus();
+
+        // Check token expiration
+        function isTokenExpired(token) {
+            if (!token) return true;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.exp * 1000 < Date.now();
+            } catch (error) {
+                return true;
+            }
+        }
+
+        // Refresh token if needed
+        async function refreshTokenIfNeeded() {
+            if (!accessToken || isTokenExpired(accessToken)) {
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (!refreshToken) {
+                    accessToken = null;
+                    updateAuthStatus();
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/auth/token/refresh/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ refresh: refreshToken }),
+                    });
+                    const data = await response.json();
+                    if (data.access) {
+                        accessToken = data.access;
+                        localStorage.setItem('accessToken', data.access);
+                        updateAuthStatus();
+                    } else {
+                        accessToken = null;
+                        updateAuthStatus();
+                    }
+                } catch (error) {
+                    console.error('Error refreshing token:', error);
+                    accessToken = null;
+                    updateAuthStatus();
+                }
+            }
+        }
+
+        function displayResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.className = 'response ' + (isError ? 'error' : 'success');
+        }
+
+        async function createPost() {
+            await refreshTokenIfNeeded();
+            if (!accessToken) {
+                displayResponse('post-response', { error: 'Please login first' }, true);
+                return;
+            }
+
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+
+            try {
+                const response = await fetch('/api/posts/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({ title, content }),
+                });
+                const data = await response.json();
+                displayResponse('post-response', data, !response.ok);
+                if (response.ok) {
+                    await loadPosts();
+                    clearPostForm();
+                }
+            } catch (error) {
+                displayResponse('post-response', { error: error.message }, true);
+            }
+        }
+
+        async function loadPosts() {
+            await refreshTokenIfNeeded();
+            try {
+                const response = await fetch('/api/posts/', {
+                    headers: accessToken ? {
+                        'Authorization': `Bearer ${accessToken}`,
+                    } : {},
+                });
+                const posts = await response.json();
+                displayPosts(posts);
+            } catch (error) {
+                console.error('Error loading posts:', error);
+            }
+        }
+
+        function displayPosts(posts) {
+            const container = document.getElementById('posts-list');
+            container.innerHTML = posts.map(post => `
+                <div class="post">
+                    <div class="post-header">
+                        <h3 class="post-title">${post.title}</h3>
+                        <div class="post-meta">
+                            By ${post.author.username} on ${new Date(post.created_at).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <div class="post-content">${post.content}</div>
+                    <div class="post-actions">
+                        <button class="like-button ${post.is_liked ? 'liked' : ''}" 
+                                onclick="toggleLike(${post.id})">
+                            ❤️ ${post.likes_count}
+                        </button>
+                        ${post.author.id === getCurrentUserId() ? `
+                            <button class="delete-button" onclick="deletePost(${post.id})">Delete</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function toggleLike(postId) {
+            await refreshTokenIfNeeded();
+            if (!accessToken) {
+                alert('Please login to like posts');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/posts/${postId}/like/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+                if (response.ok) {
+                    await loadPosts();
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+
+        async function deletePost(postId) {
+            await refreshTokenIfNeeded();
+            if (!accessToken) return;
+
+            if (!confirm('Are you sure you want to delete this post?')) return;
+
+            try {
+                const response = await fetch(`/api/posts/${postId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+                if (response.ok) {
+                    await loadPosts();
+                }
+            } catch (error) {
+                console.error('Error deleting post:', error);
+            }
+        }
+
+        function clearPostForm() {
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-content').value = '';
+        }
+
+        function getCurrentUserId() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return null;
+            
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.user_id;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        // Load posts when the page loads
+        loadPosts();
+    </script>
+</body>
+</html> 

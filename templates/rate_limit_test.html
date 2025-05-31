@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Limit Testing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --loading-color: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .test-section {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .test-section:hover {
+            transform: translateY(-2px);
+        }
+
+        .test-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .endpoint-info {
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .endpoint-info:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .endpoint-info h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .endpoint-info p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button.loading {
+            color: transparent;
+        }
+
+        button.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin: -8px 0 0 -8px;
+            border: 2px solid var(--loading-color);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: button-loading-spinner 0.6s linear infinite;
+        }
+
+        @keyframes button-loading-spinner {
+            from {
+                transform: rotate(0turn);
+            }
+            to {
+                transform: rotate(1turn);
+            }
+        }
+
+        .response {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            transition: all 0.2s ease;
+        }
+
+        .response.success {
+            border-color: var(--success-color);
+            background-color: rgba(34, 197, 94, 0.05);
+        }
+
+        .response.error {
+            border-color: var(--error-color);
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+
+        .counter {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .ip-selector {
+            margin-bottom: 1rem;
+        }
+
+        .ip-selector select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .ip-selector select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-fill.warning {
+            background-color: #f59e0b;
+        }
+
+        .progress-bar-fill.danger {
+            background-color: var(--error-color);
+        }
+
+        .auth-status {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            background-color: var(--background-color);
+            transition: all 0.2s ease;
+        }
+
+        .auth-status.logged-in {
+            color: var(--success-color);
+            background-color: rgba(34, 197, 94, 0.05);
+        }
+
+        .auth-status.logged-out {
+            color: var(--error-color);
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .test-controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Rate Limit Testing</h1>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="nav-button">Back to Home</a>
+            <a href="/blog/" class="nav-button">Go to Blog</a>
+        </div>
+
+        <div id="auth-status" class="auth-status"></div>
+
+        <div class="test-section">
+            <h2>Rate Limit Testing Configuration</h2>
+            <div class="endpoint-info">
+                <h3>IP Address Selection</h3>
+                <p>Test rate limits with different IP addresses</p>
+                <div class="ip-selector">
+                    <select id="ip-selector" onchange="updateIpAddress()">
+                        <option value="127.0.0.1">Local IP (127.0.0.1)</option>
+                        <option value="192.168.1.1">Test IP 1 (192.168.1.1)</option>
+                        <option value="192.168.1.2">Test IP 2 (192.168.1.2)</option>
+                        <option value="192.168.1.3">Test IP 3 (192.168.1.3)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Authentication Endpoints</h2>
+            
+            <div class="endpoint-info">
+                <h3>Register (5 requests per 5 minutes)</h3>
+                <p>Test the registration endpoint rate limit</p>
+                <div class="test-controls">
+                    <button id="register-button" onclick="testRegister()">Test Register</button>
+                    <button onclick="resetRegisterCounter()">Reset Counter</button>
+                </div>
+                <div id="register-counter" class="counter">
+                    <span>Requests: 0/5</span>
+                    <span id="register-timer" class="timer"></span>
+                </div>
+                <div class="progress-bar">
+                    <div id="register-progress" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div id="register-response" class="response"></div>
+            </div>
+
+            <div class="endpoint-info">
+                <h3>Login (10 requests per 5 minutes)</h3>
+                <p>Test the login endpoint rate limit</p>
+                <div class="test-controls">
+                    <button id="login-button" onclick="testLogin()">Test Login</button>
+                    <button onclick="resetLoginCounter()">Reset Counter</button>
+                </div>
+                <div id="login-counter" class="counter">
+                    <span>Requests: 0/10</span>
+                    <span id="login-timer" class="timer"></span>
+                </div>
+                <div class="progress-bar">
+                    <div id="login-progress" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div id="login-response" class="response"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Protected Endpoints</h2>
+            
+            <div class="endpoint-info">
+                <h3>Protected Route (60 requests per minute)</h3>
+                <p>Test the protected route rate limit</p>
+                <div class="test-controls">
+                    <button id="protected-button" onclick="testProtected()">Test Protected</button>
+                    <button onclick="resetProtectedCounter()">Reset Counter</button>
+                </div>
+                <div id="protected-counter" class="counter">
+                    <span>Requests: 0/60</span>
+                    <span id="protected-timer" class="timer"></span>
+                </div>
+                <div class="progress-bar">
+                    <div id="protected-progress" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div id="protected-response" class="response"></div>
+            </div>
+
+            <div class="endpoint-info">
+                <h3>Create Post (30 requests per minute)</h3>
+                <p>Test the create post endpoint rate limit</p>
+                <div class="test-controls">
+                    <button id="create-post-button" onclick="testCreatePost()">Test Create Post</button>
+                    <button onclick="resetCreatePostCounter()">Reset Counter</button>
+                </div>
+                <div id="create-post-counter" class="counter">
+                    <span>Requests: 0/30</span>
+                    <span id="create-post-timer" class="timer"></span>
+                </div>
+                <div class="progress-bar">
+                    <div id="create-post-progress" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div id="create-post-response" class="response"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const config = {
+            debounceTime: 300,
+            warningThreshold: 0.8,
+            dangerThreshold: 0.9,
+            updateInterval: 1000, // Update timers every second
+            retryAfter: 5 // Seconds to wait before retrying after rate limit
+        };
+
+        // State management
+        const state = {
+            accessToken: localStorage.getItem('accessToken'),
+            currentIp: '127.0.0.1',
+            counters: {
+                register: { count: 0, limit: 5, period: 300, timer: null, lastReset: null, retryAfter: null },
+                login: { count: 0, limit: 10, period: 300, timer: null, lastReset: null, retryAfter: null },
+                protected: { count: 0, limit: 60, period: 60, timer: null, lastReset: null, retryAfter: null },
+                createPost: { count: 0, limit: 30, period: 60, timer: null, lastReset: null, retryAfter: null }
+            },
+            debounceTimers: {},
+            updateTimers: {}
+        };
+
+        // Utility functions
+        const utils = {
+            debounce(func, wait) {
+                return (...args) => {
+                    clearTimeout(state.debounceTimers[func.name]);
+                    state.debounceTimers[func.name] = setTimeout(() => func.apply(this, args), wait);
+                };
+            },
+
+            setLoading(buttonId, isLoading) {
+                const button = document.getElementById(buttonId);
+                if (isLoading) {
+                    button.classList.add('loading');
+                    button.disabled = true;
+                } else {
+                    button.classList.remove('loading');
+                    button.disabled = false;
+                }
+            },
+
+            formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            },
+
+            parseRetryAfter(response) {
+                const retryAfter = response.headers.get('Retry-After');
+                return retryAfter ? parseInt(retryAfter) : config.retryAfter;
+            },
+
+            handleRateLimit(type, retryAfter) {
+                const counter = state.counters[type];
+                counter.retryAfter = retryAfter;
+                const button = document.getElementById(`${type}-button`);
+                button.disabled = true;
+                
+                let remaining = retryAfter;
+                const timer = setInterval(() => {
+                    remaining--;
+                    if (remaining <= 0) {
+                        clearInterval(timer);
+                        button.disabled = false;
+                        counter.retryAfter = null;
+                    }
+                    const timerElement = document.getElementById(`${type}-timer`);
+                    timerElement.textContent = `Retry in: ${remaining}s`;
+                }, 1000);
+            }
+        };
+
+        // UI update functions
+        const ui = {
+            updateAuthStatus() {
+                const authStatus = document.getElementById('auth-status');
+                if (state.accessToken) {
+                    authStatus.textContent = 'You are logged in';
+                    authStatus.className = 'auth-status logged-in';
+                } else {
+                    authStatus.textContent = 'Please login at the home page to test protected endpoints';
+                    authStatus.className = 'auth-status logged-out';
+                }
+            },
+
+            updateCounter(type) {
+                const counter = state.counters[type];
+                const counterElement = document.getElementById(`${type}-counter`);
+                const progressElement = document.getElementById(`${type}-progress`);
+                const timerElement = document.getElementById(`${type}-timer`);
+                
+                const progress = counter.count / counter.limit;
+                counterElement.querySelector('span:first-child').textContent = `Requests: ${counter.count}/${counter.limit}`;
+                progressElement.style.width = `${progress * 100}%`;
+
+                // Update progress bar color based on threshold
+                progressElement.className = 'progress-bar-fill';
+                if (progress >= config.dangerThreshold) {
+                    progressElement.classList.add('danger');
+                } else if (progress >= config.warningThreshold) {
+                    progressElement.classList.add('warning');
+                }
+
+                // Update timer
+                if (counter.retryAfter !== null) {
+                    timerElement.textContent = `Retry in: ${counter.retryAfter}s`;
+                } else if (counter.lastReset) {
+                    const elapsed = Math.floor((Date.now() - counter.lastReset) / 1000);
+                    const remaining = counter.period - elapsed;
+                    if (remaining > 0) {
+                        timerElement.textContent = `Resets in: ${utils.formatTime(remaining)}`;
+                    } else {
+                        timerElement.textContent = 'Ready to reset';
+                    }
+                }
+            },
+
+            displayResponse(elementId, data, isError = false) {
+                const element = document.getElementById(elementId);
+                element.textContent = JSON.stringify(data, null, 2);
+                element.className = `response ${isError ? 'error' : 'success'}`;
+            },
+
+            startUpdateTimer(type) {
+                if (state.updateTimers[type]) {
+                    clearInterval(state.updateTimers[type]);
+                }
+                state.updateTimers[type] = setInterval(() => {
+                    this.updateCounter(type);
+                }, config.updateInterval);
+            },
+
+            stopUpdateTimer(type) {
+                if (state.updateTimers[type]) {
+                    clearInterval(state.updateTimers[type]);
+                    delete state.updateTimers[type];
+                }
+            }
+        };
+
+        // API functions
+        const api = {
+            async makeRequest(endpoint, options = {}) {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'X-Forwarded-For': state.currentIp,
+                    ...options.headers
+                };
+
+                if (state.accessToken) {
+                    headers['Authorization'] = `Bearer ${state.accessToken}`;
+                }
+
+                const response = await fetch(endpoint, {
+                    ...options,
+                    headers
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401) {
+                    localStorage.removeItem('accessToken');
+                    state.accessToken = null;
+                    ui.updateAuthStatus();
+                    throw new Error('Session expired. Please login again.');
+                }
+
+                return { response, data };
+            }
+        };
+
+        // Test functions
+        const tests = {
+            async testRegister() {
+                const buttonId = 'register-button';
+                utils.setLoading(buttonId, true);
+
+                try {
+                    const counter = state.counters.register;
+                    if (counter.count >= counter.limit) {
+                        throw new Error('Rate limit exceeded');
+                    }
+
+                    const { response, data } = await api.makeRequest('/api/auth/register/', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            username: `testuser${Date.now()}`,
+                            email: `test${Date.now()}@example.com`,
+                            password: 'testpass123'
+                        })
+                    });
+
+                    if (response.status === 429) {
+                        const retryAfter = utils.parseRetryAfter(response);
+                        utils.handleRateLimit('register', retryAfter);
+                    } else {
+                        counter.count++;
+                    }
+
+                    ui.updateCounter('register');
+                    ui.displayResponse('register-response', data, !response.ok);
+                } catch (error) {
+                    ui.displayResponse('register-response', { error: error.message }, true);
+                } finally {
+                    utils.setLoading(buttonId, false);
+                }
+            },
+
+            async testLogin() {
+                const buttonId = 'login-button';
+                utils.setLoading(buttonId, true);
+
+                try {
+                    const counter = state.counters.login;
+                    if (counter.count >= counter.limit) {
+                        throw new Error('Rate limit exceeded');
+                    }
+
+                    const { response, data } = await api.makeRequest('/api/auth/login/', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            username: 'testuser',
+                            password: 'testpass123'
+                        })
+                    });
+
+                    if (response.status === 429) {
+                        const retryAfter = utils.parseRetryAfter(response);
+                        utils.handleRateLimit('login', retryAfter);
+                    } else {
+                        counter.count++;
+                        if (data.access) {
+                            state.accessToken = data.access;
+                            localStorage.setItem('accessToken', data.access);
+                            ui.updateAuthStatus();
+                        }
+                    }
+
+                    ui.updateCounter('login');
+                    ui.displayResponse('login-response', data, !response.ok);
+                } catch (error) {
+                    ui.displayResponse('login-response', { error: error.message }, true);
+                } finally {
+                    utils.setLoading(buttonId, false);
+                }
+            },
+
+            async testProtected() {
+                if (!state.accessToken) {
+                    ui.displayResponse('protected-response', { error: 'Please login first' }, true);
+                    return;
+                }
+
+                const buttonId = 'protected-button';
+                utils.setLoading(buttonId, true);
+
+                try {
+                    const counter = state.counters.protected;
+                    if (counter.count >= counter.limit) {
+                        throw new Error('Rate limit exceeded');
+                    }
+
+                    const { response, data } = await api.makeRequest('/api/protected/');
+
+                    if (response.status === 429) {
+                        const retryAfter = utils.parseRetryAfter(response);
+                        utils.handleRateLimit('protected', retryAfter);
+                    } else {
+                        counter.count++;
+                    }
+
+                    ui.updateCounter('protected');
+                    ui.displayResponse('protected-response', data, !response.ok);
+                } catch (error) {
+                    ui.displayResponse('protected-response', { error: error.message }, true);
+                } finally {
+                    utils.setLoading(buttonId, false);
+                }
+            },
+
+            async testCreatePost() {
+                if (!state.accessToken) {
+                    ui.displayResponse('create-post-response', { error: 'Please login first' }, true);
+                    return;
+                }
+
+                const buttonId = 'create-post-button';
+                utils.setLoading(buttonId, true);
+
+                try {
+                    const counter = state.counters.createPost;
+                    if (counter.count >= counter.limit) {
+                        throw new Error('Rate limit exceeded');
+                    }
+
+                    const { response, data } = await api.makeRequest('/api/posts/', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            title: `Test Post ${Date.now()}`,
+                            content: 'This is a test post for rate limiting'
+                        })
+                    });
+
+                    if (response.status === 429) {
+                        const retryAfter = utils.parseRetryAfter(response);
+                        utils.handleRateLimit('createPost', retryAfter);
+                    } else {
+                        counter.count++;
+                    }
+
+                    ui.updateCounter('createPost');
+                    ui.displayResponse('create-post-response', data, !response.ok);
+                } catch (error) {
+                    ui.displayResponse('create-post-response', { error: error.message }, true);
+                } finally {
+                    utils.setLoading(buttonId, false);
+                }
+            }
+        };
+
+        // Counter management
+        const counters = {
+            startTimer(type) {
+                const counter = state.counters[type];
+                if (counter.timer) {
+                    clearInterval(counter.timer);
+                }
+                
+                counter.lastReset = Date.now();
+                counter.timer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - counter.lastReset) / 1000);
+                    if (elapsed >= counter.period) {
+                        this.resetCounter(type);
+                    } else {
+                        ui.updateCounter(type);
+                    }
+                }, 1000);
+            },
+
+            resetCounter(type) {
+                const counter = state.counters[type];
+                counter.count = 0;
+                counter.lastReset = Date.now();
+                counter.retryAfter = null;
+                ui.updateCounter(type);
+                this.startTimer(type);
+            }
+        };
+
+        // Event handlers
+        function updateIpAddress() {
+            state.currentIp = document.getElementById('ip-selector').value;
+            Object.keys(state.counters).forEach(type => {
+                counters.resetCounter(type);
+                ui.startUpdateTimer(type);
+            });
+        }
+
+        // Initialize
+        function init() {
+            // Set up debounced test functions
+            window.testRegister = utils.debounce(tests.testRegister, config.debounceTime);
+            window.testLogin = utils.debounce(tests.testLogin, config.debounceTime);
+            window.testProtected = utils.debounce(tests.testProtected, config.debounceTime);
+            window.testCreatePost = utils.debounce(tests.testCreatePost, config.debounceTime);
+
+            // Set up reset functions
+            window.resetRegisterCounter = () => counters.resetCounter('register');
+            window.resetLoginCounter = () => counters.resetCounter('login');
+            window.resetProtectedCounter = () => counters.resetCounter('protected');
+            window.resetCreatePostCounter = () => counters.resetCounter('createPost');
+
+            // Initialize counters and UI
+            Object.keys(state.counters).forEach(type => {
+                counters.resetCounter(type);
+                ui.startUpdateTimer(type);
+            });
+            ui.updateAuthStatus();
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html> 

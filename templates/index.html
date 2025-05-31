@@ -33,7 +33,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
@@ -58,6 +58,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .endpoint {
@@ -93,7 +94,7 @@
             font-weight: 500;
         }
 
-        input {
+        input, select, textarea {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid var(--border-color);
@@ -102,7 +103,7 @@
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        input:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -162,6 +163,54 @@
             margin-bottom: 0.25rem;
         }
 
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background-color: var(--card-background);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background-color: var(--background-color);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-buttons button {
+            width: auto;
+            padding: 0.5rem 1rem;
+        }
+
+        .edit-button {
+            background-color: var(--primary-color);
+        }
+
+        .delete-button {
+            background-color: var(--error-color);
+        }
+
+        .delete-button:hover {
+            background-color: #dc2626;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 1rem auto;
@@ -174,6 +223,36 @@
             .endpoints-grid {
                 grid-template-columns: 1fr;
             }
+
+            .data-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-button:hover {
+            background-color: var(--primary-hover);
         }
     </style>
 </head>
@@ -182,6 +261,11 @@
         <div class="header">
             <h1>Authentication API Tester</h1>
             <p>Test your authentication endpoints with this interactive interface</p>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/blog/" class="nav-button">Go to Blog</a>
+            <a href="/rate-limit-test/" class="nav-button">Test Rate Limits</a>
         </div>
         
         <div class="endpoints-grid">
@@ -198,6 +282,14 @@
                 <div class="form-group">
                     <label for="register-password">Password</label>
                     <input type="password" id="register-password" placeholder="Enter password">
+                </div>
+                <div class="form-group">
+                    <label for="register-photo">Profile Photo (optional, JPG/PNG/WebP, max 2MB)</label>
+                    <input type="file" id="register-photo" accept="image/jpeg,image/png,image/webp">
+                    <div id="photo-preview-container" style="margin-top:0.5rem;display:none;">
+                        <img id="photo-preview" src="#" alt="Image Preview" style="max-width:100px;max-height:100px;border-radius:8px;" />
+                        <div id="photo-error" class="error" style="margin-top:0.5rem;"></div>
+                    </div>
                 </div>
                 <button onclick="register()">Register</button>
                 <div id="register-response" class="response"></div>
@@ -222,40 +314,74 @@
                     <div id="refresh-token-display"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="endpoint">
-                <h3>Refresh Token</h3>
-                <div class="form-group">
-                    <label for="refresh-token">Refresh Token</label>
-                    <input type="text" id="refresh-token" placeholder="Enter refresh token">
-                </div>
-                <button onclick="refreshToken()">Refresh Token</button>
-                <div id="refresh-response" class="response"></div>
+        <div class="endpoint">
+            <h3>Products Management</h3>
+            <div class="form-group">
+                <label for="product-name">Name</label>
+                <input type="text" id="product-name" placeholder="Enter product name">
             </div>
+            <div class="form-group">
+                <label for="product-description">Description</label>
+                <textarea id="product-description" placeholder="Enter product description"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="product-price">Price</label>
+                <input type="number" id="product-price" placeholder="Enter price" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="product-stock">Stock</label>
+                <input type="number" id="product-stock" placeholder="Enter stock quantity">
+            </div>
+            <button onclick="createProduct()">Create Product</button>
+            <div id="product-response" class="response"></div>
+            <div id="products-list"></div>
+        </div>
 
-            <div class="endpoint">
-                <h3>Protected Route</h3>
-                <div class="form-group">
-                    <label for="access-token">Access Token</label>
-                    <input type="text" id="access-token" placeholder="Enter access token">
-                </div>
-                <button onclick="accessProtected()">Access Protected Route</button>
-                <div id="protected-response" class="response"></div>
+        <div class="endpoint">
+            <h3>Orders Management</h3>
+            <div class="form-group">
+                <label for="order-product">Product</label>
+                <select id="order-product">
+                    <option value="">Select a product</option>
+                </select>
             </div>
+            <div class="form-group">
+                <label for="order-quantity">Quantity</label>
+                <input type="number" id="order-quantity" placeholder="Enter quantity" min="1">
+            </div>
+            <div class="form-group">
+                <label for="order-status">Status</label>
+                <select id="order-status">
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <button onclick="createOrder()">Create Order</button>
+            <div id="order-response" class="response"></div>
+            <div id="orders-list"></div>
         </div>
     </div>
 
     <script>
+        let accessToken = '';
+        let refreshToken = '';
+
         function displayResponse(elementId, data, isError = false) {
             const element = document.getElementById(elementId);
             element.textContent = JSON.stringify(data, null, 2);
             element.className = 'response ' + (isError ? 'error' : 'success');
         }
 
-        function displayTokens(accessToken, refreshToken) {
+        function displayTokens(access, refresh) {
+            accessToken = access;
+            refreshToken = refresh;
             const tokenDisplay = document.getElementById('login-tokens');
-            document.getElementById('access-token-display').textContent = accessToken;
-            document.getElementById('refresh-token-display').textContent = refreshToken;
+            document.getElementById('access-token-display').textContent = access;
+            document.getElementById('refresh-token-display').textContent = refresh;
             tokenDisplay.style.display = 'block';
         }
 
@@ -263,17 +389,57 @@
             const username = document.getElementById('register-username').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
+            const photoInput = document.getElementById('register-photo');
+            const photo = photoInput.files[0];
+            const photoError = document.getElementById('photo-error');
+            photoError.textContent = '';
+
+            // Client-side validation
+            if (photo) {
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!allowedTypes.includes(photo.type)) {
+                    photoError.textContent = 'Only JPG, PNG, or WebP images are allowed.';
+                    return;
+                }
+                if (photo.size > 2 * 1024 * 1024) {
+                    photoError.textContent = 'Image size must be less than 2MB.';
+                    return;
+                }
+            }
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('email', email);
+            formData.append('password', password);
+            if (photo) {
+                formData.append('photo', photo);
+            }
 
             try {
                 const response = await fetch('/api/auth/register/', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, email, password }),
+                    body: formData
                 });
-                const data = await response.json();
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`Server returned non-JSON response: ${text}`);
+                }
+                
                 displayResponse('register-response', data, !response.ok);
+                
+                if (response.ok) {
+                    // Clear form on success
+                    document.getElementById('register-username').value = '';
+                    document.getElementById('register-email').value = '';
+                    document.getElementById('register-password').value = '';
+                    document.getElementById('register-photo').value = '';
+                    document.getElementById('photo-preview-container').style.display = 'none';
+                }
             } catch (error) {
                 displayResponse('register-response', { error: error.message }, true);
             }
@@ -295,54 +461,287 @@
                 displayResponse('login-response', data, !response.ok);
                 
                 if (data.access && data.refresh) {
-                    document.getElementById('access-token').value = data.access;
-                    document.getElementById('refresh-token').value = data.refresh;
+                    localStorage.setItem('accessToken', data.access);
+                    localStorage.setItem('refreshToken', data.refresh);
                     displayTokens(data.access, data.refresh);
+                    await loadProducts();
+                    await loadOrders();
                 }
             } catch (error) {
                 displayResponse('login-response', { error: error.message }, true);
             }
         }
 
-        async function refreshToken() {
-            const refresh = document.getElementById('refresh-token').value;
+        async function createProduct() {
+            if (!accessToken) {
+                displayResponse('product-response', { error: 'Please login first' }, true);
+                return;
+            }
+
+            const name = document.getElementById('product-name').value;
+            const description = document.getElementById('product-description').value;
+            const price = document.getElementById('product-price').value;
+            const stock = document.getElementById('product-stock').value;
 
             try {
-                const response = await fetch('/api/auth/token/refresh/', {
+                const response = await fetch('/api/products/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
                     },
-                    body: JSON.stringify({ refresh }),
+                    body: JSON.stringify({ name, description, price, stock }),
                 });
                 const data = await response.json();
-                displayResponse('refresh-response', data, !response.ok);
-                
-                if (data.access) {
-                    document.getElementById('access-token').value = data.access;
-                    document.getElementById('access-token-display').textContent = data.access;
+                displayResponse('product-response', data, !response.ok);
+                if (response.ok) {
+                    await loadProducts();
+                    clearProductForm();
                 }
             } catch (error) {
-                displayResponse('refresh-response', { error: error.message }, true);
+                displayResponse('product-response', { error: error.message }, true);
             }
         }
 
-        async function accessProtected() {
-            const token = document.getElementById('access-token').value;
+        async function loadProducts() {
+            if (!accessToken) return;
 
             try {
-                const response = await fetch('/api/protected/', {
-                    method: 'GET',
+                const response = await fetch('/api/products/', {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': `Bearer ${accessToken}`,
                     },
                 });
-                const data = await response.json();
-                displayResponse('protected-response', data, !response.ok);
+                const products = await response.json();
+                displayProducts(products);
+                updateProductSelect(products);
             } catch (error) {
-                displayResponse('protected-response', { error: error.message }, true);
+                console.error('Error loading products:', error);
             }
         }
+
+        function displayProducts(products) {
+            const container = document.getElementById('products-list');
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${products.map(product => `
+                        <tr>
+                            <td>${product.name}</td>
+                            <td>${product.description}</td>
+                            <td>$${product.price}</td>
+                            <td>${product.stock}</td>
+                            <td class="action-buttons">
+                                <button class="edit-button" onclick="editProduct(${product.id})">Edit</button>
+                                <button class="delete-button" onclick="deleteProduct(${product.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        function updateProductSelect(products) {
+            const select = document.getElementById('order-product');
+            select.innerHTML = '<option value="">Select a product</option>' +
+                products.map(product => 
+                    `<option value="${product.id}">${product.name} - $${product.price}</option>`
+                ).join('');
+        }
+
+        async function createOrder() {
+            if (!accessToken) {
+                displayResponse('order-response', { error: 'Please login first' }, true);
+                return;
+            }
+
+            const productId = document.getElementById('order-product').value;
+            const quantity = document.getElementById('order-quantity').value;
+            const status = document.getElementById('order-status').value;
+
+            try {
+                const response = await fetch('/api/orders/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({ product_id: productId, quantity, status }),
+                });
+                const data = await response.json();
+                displayResponse('order-response', data, !response.ok);
+                if (response.ok) {
+                    await loadOrders();
+                    clearOrderForm();
+                }
+            } catch (error) {
+                displayResponse('order-response', { error: error.message }, true);
+            }
+        }
+
+        async function loadOrders() {
+            if (!accessToken) return;
+
+            try {
+                const response = await fetch('/api/orders/', {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+                const orders = await response.json();
+                displayOrders(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('orders-list');
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th>Total Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orders.map(order => `
+                        <tr>
+                            <td>${order.product.name}</td>
+                            <td>${order.quantity}</td>
+                            <td>${order.status}</td>
+                            <td>$${order.total_price}</td>
+                            <td class="action-buttons">
+                                <button class="edit-button" onclick="editOrder(${order.id})">Edit</button>
+                                <button class="delete-button" onclick="deleteOrder(${order.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        function clearProductForm() {
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-description').value = '';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-stock').value = '';
+        }
+
+        function clearOrderForm() {
+            document.getElementById('order-product').value = '';
+            document.getElementById('order-quantity').value = '';
+            document.getElementById('order-status').value = 'pending';
+        }
+
+        async function editProduct(id) {
+            // Implement edit product functionality
+            console.log('Edit product:', id);
+        }
+
+        async function deleteProduct(id) {
+            if (!accessToken) return;
+
+            if (!confirm('Are you sure you want to delete this product?')) return;
+
+            try {
+                const response = await fetch(`/api/products/${id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+                if (response.ok) {
+                    await loadProducts();
+                } else {
+                    const data = await response.json();
+                    displayResponse('product-response', data, true);
+                }
+            } catch (error) {
+                displayResponse('product-response', { error: error.message }, true);
+            }
+        }
+
+        async function editOrder(id) {
+            // Implement edit order functionality
+            console.log('Edit order:', id);
+        }
+
+        async function deleteOrder(id) {
+            if (!accessToken) return;
+
+            if (!confirm('Are you sure you want to delete this order?')) return;
+
+            try {
+                const response = await fetch(`/api/orders/${id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+                if (response.ok) {
+                    await loadOrders();
+                } else {
+                    const data = await response.json();
+                    displayResponse('order-response', data, true);
+                }
+            } catch (error) {
+                displayResponse('order-response', { error: error.message }, true);
+            }
+        }
+
+        // Image preview logic
+        document.getElementById('register-photo').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const previewContainer = document.getElementById('photo-preview-container');
+            const preview = document.getElementById('photo-preview');
+            const photoError = document.getElementById('photo-error');
+            photoError.textContent = '';
+            if (file) {
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    previewContainer.style.display = 'none';
+                    photoError.textContent = 'Only JPG, PNG, or WebP images are allowed.';
+                    return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    previewContainer.style.display = 'none';
+                    photoError.textContent = 'Image size must be less than 2MB.';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html> 
